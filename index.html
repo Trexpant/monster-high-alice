@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="oklch(0.13 0.012 290)">
+    <meta name="description" content="Um arquivo pessoal para catalogar bonecas Monster High por geração e coleção.">
+    <title>Meu arquivo — Monster High</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-rail" aria-label="Navegação do acervo">
+        <a class="brand" href="#top" aria-label="Monster High, início">
+          <span class="brand-mark" aria-hidden="true">MH</span>
+          <span class="brand-copy"><strong>Monster High</strong><small>meu arquivo</small></span>
+        </a>
+
+        <div class="rail-label">Gerações</div>
+        <nav id="generationNav" class="generation-nav" aria-label="Filtrar por geração"></nav>
+
+        <div class="rail-note">
+          <span class="note-stamp" aria-hidden="true">✦</span>
+          <p>Um lugar para cada monstrinha — e para as que ainda faltam.</p>
+        </div>
+
+        <button id="backupButton" class="rail-action" type="button">
+          <span aria-hidden="true">↓</span> Baixar backup
+        </button>
+        <button id="restoreButton" class="rail-action" type="button"><span aria-hidden="true">↑</span> Restaurar backup</button>
+        <input id="restoreInput" class="sr-only" type="file" accept="application/json,.json" aria-label="Importar backup do acervo">
+      </aside>
+
+      <main id="top" class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb"><span>Meu arquivo</span><span aria-hidden="true">/</span><strong id="generationCrumb">G1</strong></div>
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <span class="sr-only">Buscar boneca</span>
+            <input id="searchInput" type="search" placeholder="Buscar personagem…" autocomplete="off">
+            <kbd>Ctrl K</kbd>
+          </label>
+        </header>
+
+        <section class="intro" aria-labelledby="pageTitle">
+          <div>
+            <p id="generationEyebrow" class="eyebrow">ARQUIVO DE COLECIONADORA</p>
+            <h1 id="pageTitle">Meu acervo monstruoso</h1>
+            <p id="pageDescription" class="intro-copy">Cada geração, cada coleção, cada detalhe que faz essa monstrinha ser sua.</p>
+          </div>
+          <button id="addDollButton" class="button button-primary" type="button">
+            <span aria-hidden="true">＋</span> Adicionar boneca
+          </button>
+        </section>
+
+        <section class="collection-bar" aria-label="Resumo do acervo">
+          <div class="collection-heading">
+            <div>
+              <p class="eyebrow">VISÃO DA GERAÇÃO</p>
+              <h2 id="collectionTitle">G1 · O elenco clássico</h2>
+            </div>
+            <div class="collection-totals" aria-live="polite">
+              <span><strong id="ownedCount">0</strong> no acervo</span>
+              <span class="totals-divider" aria-hidden="true"></span>
+              <span><strong id="missingCount">0</strong> faltantes</span>
+            </div>
+          </div>
+          <div id="collectionNav" class="collection-nav" role="group" aria-label="Coleções desta geração"></div>
+        </section>
+
+        <div class="workspace" id="workspace">
+          <section class="catalog" aria-label="Bonecas da coleção selecionada">
+            <div class="catalog-heading">
+              <div>
+                <h2 id="selectedCollectionTitle">Primeira onda · 2010</h2>
+                <p id="selectedCollectionDescription">As seis personagens que deram início a tudo.</p>
+              </div>
+              <button id="editCollectionButton" class="text-button" type="button">＋ Adicionar nome</button>
+            </div>
+
+            <div id="ownedSection" class="owned-section" hidden>
+              <h3>Com lugar garantido <span id="ownedSectionCount">0</span></h3>
+              <div id="ownedGrid" class="owned-grid"></div>
+            </div>
+
+            <section id="missingSection" class="missing-section" aria-labelledby="missingTitle">
+              <div class="list-heading">
+                <h3 id="missingTitle">Ainda estão na lista <span id="missingSectionCount">0</span></h3>
+                <span class="list-caption">só os nomes, até chegarem em casa</span>
+              </div>
+              <ul id="missingList" class="missing-list"></ul>
+              <div id="emptyState" class="empty-state" hidden>
+                <span class="empty-sigil" aria-hidden="true">✦</span>
+                <h3>Esta página ainda está em branco</h3>
+                <p>Adicione uma boneca para começar a montar esta coleção.</p>
+                <button id="emptyAddButton" class="button button-secondary" type="button">Adicionar boneca</button>
+              </div>
+            </section>
+          </section>
+
+          <aside id="editorPanel" class="editor-panel" aria-label="Detalhes da boneca" hidden>
+            <div class="editor-heading">
+              <div>
+                <p id="editorEyebrow" class="eyebrow">DETALHES DO ACERVO</p>
+                <h2 id="editorTitle">Nova boneca</h2>
+              </div>
+              <button id="closeEditorButton" class="icon-button" type="button" aria-label="Fechar detalhes">×</button>
+            </div>
+            <form id="dollForm">
+              <input id="dollId" type="hidden">
+              <label class="field-label" for="dollName">Nome</label>
+              <input id="dollName" class="form-control" name="name" required maxlength="80" autocomplete="off">
+
+              <div class="field-row">
+                <label class="field-group"><span class="field-label">Geração</span><select id="dollGeneration" class="form-control" name="generation"></select></label>
+                <label class="field-group"><span class="field-label">Coleção</span><select id="dollCollection" class="form-control" name="collection"></select></label>
+              </div>
+
+              <fieldset class="status-fieldset">
+                <legend class="field-label">Está no meu acervo?</legend>
+                <label class="radio-option"><input type="radio" name="owned" value="true"><span>Tenho esta boneca</span></label>
+                <label class="radio-option"><input type="radio" name="owned" value="false"><span>Ainda falta</span></label>
+              </fieldset>
+
+              <div id="ownedDetails" class="owned-details">
+                <label class="field-group"><span class="field-label">Valor estimado (R$)</span><input id="dollValue" class="form-control" type="number" name="value" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+
+                <label class="field-group"><span class="field-label">Foto da sua boneca</span><input id="dollPhoto" class="form-control file-control" type="file" accept="image/*"></label>
+                <div id="photoPreview" class="photo-preview" hidden></div>
+                <button id="removePhotoButton" class="text-button remove-photo" type="button" hidden>Remover foto</button>
+
+                <label class="field-group"><span class="field-label">Acessórios que tenho</span><textarea id="accessoriesOwned" class="form-control" name="accessoriesOwned" rows="3" placeholder="Um acessório por linha"></textarea></label>
+                <label class="field-group"><span class="field-label">Acessórios que faltam</span><textarea id="accessoriesMissing" class="form-control" name="accessoriesMissing" rows="3" placeholder="Um acessório por linha"></textarea></label>
+              </div>
+
+              <p id="formError" class="form-error" role="alert" hidden></p>
+              <div class="form-actions">
+                <button id="deleteDollButton" class="text-button delete-button" type="button" hidden>Excluir do catálogo</button>
+                <button class="button button-primary save-button" type="submit">Salvar boneca</button>
+              </div>
+            </form>
+          </aside>
+        </div>
+        <footer class="page-footer">Seu acervo fica salvo neste navegador. Faça um backup antes de trocar ou limpar o dispositivo.</footer>
+      </main>
+    </div>
+  </body>
+</html>
