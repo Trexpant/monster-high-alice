@@ -128,6 +128,12 @@
 
                 <label class="field-group"><span class="field-label">Foto da sua boneca</span><input id="dollPhoto" class="form-control file-control" type="file" accept="image/*"></label>
                 <div id="photoPreview" class="photo-preview" hidden></div>
+                <div class="photo-tools">
+                  <button id="identifyDollButton" class="button button-secondary" type="button" disabled>✦ Sugerir nome pela foto</button>
+                  <p class="photo-help">A análise da imagem acontece neste dispositivo. A primeira vez, o modelo precisa ser baixado.</p>
+                  <div id="identificationResults" class="identification-results" aria-live="polite"></div>
+                </div>
+                <div id="priceEstimate" class="price-estimate" aria-live="polite"></div>
                 <button id="removePhotoButton" class="text-button remove-photo" type="button" hidden>Remover foto</button>
 
                 <label class="field-group"><span class="field-label">Acessórios que tenho</span><textarea id="accessoriesOwned" class="form-control" name="accessoriesOwned" rows="3" placeholder="Um acessório por linha"></textarea></label>

@@ -36,6 +36,7 @@ let editingId = null;
 let selectedPhoto = null;
 let photoWasRemoved = false;
 let previewUrl = null;
+let imageClassifierPromise = null;
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -217,6 +218,8 @@ function showEditor(doll = null, { owned = doll?.owned ?? false, newEntry = fals
   document.querySelector('#editorEyebrow').textContent = doll ? 'DETALHES DO ACERVO' : 'NOVO REGISTRO';
   document.querySelector('#deleteDollButton').hidden = !doll || doll.seeded;
   renderPhotoPreview(doll?.photo ?? null);
+  document.querySelector('#identificationResults').replaceChildren();
+  document.querySelector('#priceEstimate').replaceChildren();
   document.querySelector('#removePhotoButton').hidden = !doll?.photo;
   document.querySelector('#ownedDetails').hidden = !owned;
   editorPanel.hidden = false;
@@ -235,6 +238,7 @@ function closeEditor() {
 
 function renderPhotoPreview(photo) {
   const preview = document.querySelector('#photoPreview');
+  document.querySelector('#identifyDollButton').disabled = !photo;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = null;
   if (!photo) {
@@ -246,6 +250,74 @@ function renderPhotoPreview(photo) {
   previewUrl = URL.createObjectURL(photo);
   preview.querySelector('img').src = previewUrl;
   preview.hidden = false;
+}
+
+async function identifyDoll() {
+  const button = document.querySelector('#identifyDollButton');
+  const results = document.querySelector('#identificationResults');
+  const photo = selectedPhoto ?? state.dolls.find((doll) => doll.id === editingId)?.photo;
+  if (!photo) return;
+  button.disabled = true;
+  results.textContent = 'Preparando o reconhecedor no dispositivo…';
+  try {
+    imageClassifierPromise ??= import('https://esm.sh/@huggingface/transformers@3.8.1').then(({ pipeline, env }) => {
+      env.allowLocalModels = false;
+      return pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32');
+    });
+    const classifier = await imageClassifierPromise;
+    const entries = [...new Map(state.dolls.map((doll) => [`${doll.name}|${doll.generation}|${doll.collectionId}`, doll])).values()];
+    const candidates = entries.map((doll) => `${doll.name}, boneca Monster High ${getGeneration(doll.generation)?.label ?? ''} ${getCollection(doll.collectionId)?.name ?? ''}`);
+    const objectUrl = URL.createObjectURL(photo);
+    let output;
+    try { output = await classifier(objectUrl, candidates, { topk: 5 }); }
+    finally { URL.revokeObjectURL(objectUrl); }
+    results.replaceChildren();
+    const heading = document.createElement('p');
+    heading.textContent = 'Sugestões visuais — confirme a versão da boneca:';
+    results.append(heading);
+    for (const suggestion of output) {
+      const doll = entries[candidates.indexOf(suggestion.label)];
+      if (!doll) continue;
+      const option = document.createElement('button');
+      option.type = 'button'; option.className = 'suggestion-option';
+      option.textContent = `${doll.name} · ${getGeneration(doll.generation)?.label} · ${getCollection(doll.collectionId)?.name}`;
+      option.addEventListener('click', () => {
+        document.querySelector('#dollName').value = doll.name;
+        document.querySelector('#dollGeneration').value = doll.generation;
+        fillCollectionSelect(doll.collectionId);
+        estimatePrice(doll.name);
+      });
+      results.append(option);
+    }
+  } catch (error) {
+    imageClassifierPromise = null;
+    results.textContent = `Não consegui analisar esta foto. ${error.message || 'Verifique a conexão e tente novamente.'}`;
+  } finally { button.disabled = false; }
+}
+
+async function estimatePrice(name) {
+  const panel = document.querySelector('#priceEstimate');
+  panel.textContent = 'Consultando anúncios ativos do Mercado Livre…';
+  try {
+    const response = await fetch(`/api/meli/estimate?q=${encodeURIComponent(name)}`, { credentials: 'same-origin' });
+    const data = await response.json();
+    if (response.status === 401) {
+      panel.replaceChildren(document.createTextNode('Conecte sua conta do Mercado Livre para consultar preços. '));
+      const connect = document.createElement('a'); connect.href = '/api/meli/connect'; connect.textContent = 'Conectar Mercado Livre';
+      panel.append(connect); return;
+    }
+    if (!response.ok) throw new Error(data.error || 'Consulta indisponível.');
+    if (!data.count) { panel.textContent = 'Não encontrei anúncios comparáveis para estimar o preço.'; return; }
+    panel.replaceChildren();
+    const summary = document.createElement('p');
+    summary.textContent = `Média anunciada: ${formatValue(data.average)} · ${data.count} anúncios · faixa ${formatValue(data.min)}–${formatValue(data.max)}.`;
+    panel.append(summary);
+    const apply = document.createElement('button'); apply.type = 'button'; apply.className = 'text-button'; apply.textContent = 'Usar esta média';
+    apply.addEventListener('click', () => { document.querySelector('#dollValue').value = Number(data.average).toFixed(2); });
+    panel.append(apply);
+    const date = document.createElement('small'); date.textContent = `Consultado em ${new Date(data.checkedAt).toLocaleString('pt-BR')}. Preços pedidos em anúncios ativos.`;
+    panel.append(date);
+  } catch (error) { panel.textContent = error.message; }
 }
 
 function lines(value) {
@@ -490,12 +562,14 @@ document.querySelector('#dollPhoto').addEventListener('change', (event) => {
   renderPhotoPreview(selectedPhoto);
   document.querySelector('#removePhotoButton').hidden = false;
 });
+document.querySelector('#identifyDollButton').addEventListener('click', identifyDoll);
 document.querySelector('#removePhotoButton').addEventListener('click', () => {
   selectedPhoto = null;
   photoWasRemoved = true;
   document.querySelector('#dollPhoto').value = '';
   document.querySelector('#removePhotoButton').hidden = true;
   renderPhotoPreview(null);
+  document.querySelector('#identificationResults').replaceChildren();
 });
 document.querySelector('#backupButton').addEventListener('click', exportBackup);
 document.querySelector('#restoreButton').addEventListener('click', () => document.querySelector('#restoreInput').click());

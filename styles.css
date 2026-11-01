@@ -150,6 +150,15 @@ textarea.form-control { min-height: 70px; resize: vertical; line-height: 1.5; }
 .photo-preview { overflow: hidden; max-height: 230px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); }
 .photo-preview img { display: block; width: 100%; max-height: 230px; object-fit: contain; }
 .remove-photo { justify-self: start; min-height: 32px; color: var(--muted); }
+.photo-tools { display: grid; gap: 8px; }
+.photo-help, .price-estimate small { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.photo-tools .button { justify-self: start; }
+.identification-results, .price-estimate { display: grid; gap: 7px; color: var(--text); font-size: 12px; line-height: 1.5; }
+.identification-results p, .price-estimate p { margin: 0; }
+.suggestion-option { min-height: 40px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface-raised); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.suggestion-option:hover { border-color: var(--primary-hover); }
+.price-estimate { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-soft); }
+.price-estimate a { color: var(--primary-hover); }
 .form-error { margin: 0; color: oklch(0.81 0.11 25); font-size: 12px; line-height: 1.45; }
 .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 .save-button { min-width: 136px; }
